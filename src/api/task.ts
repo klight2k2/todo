@@ -1,5 +1,5 @@
 import { db } from "@/firebase"
-import { addDoc, collection, deleteDoc, doc, setDoc } from "firebase/firestore"
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore"
 
 export type Comment = {
     email: string,
@@ -61,10 +61,57 @@ const del = (id: string) => {
     }
 }
 
+const getDetail = (id: string, ...field: string[]) => {
+    try {
+        const taskRef = doc(db, "tasks", id, ...field);
+        return getDoc(taskRef);
+    } catch (error) {
+        console.log(error);
+        return null;
+    }
+}
+
+const getMyTasks = async (email: string) => {
+    try {
+        const q = query(collection(db, "tasks"), where("assignee", "array-contains", email));
+        const res = await getDocs(q);
+        const tasks = res.docs.map((doc: any) => {
+            return {
+                id: doc.id,
+                ...doc.data(),
+            }
+        });
+        return tasks as Task[];
+    } catch (error) {
+        console.log(error);
+        return null;
+    }
+}
+  
+const getByProject = async (projectId: string) => {
+    try {
+        const q = query(collection(db, "tasks"), where("projectId", "==", projectId));
+        const res = await getDocs(q);
+        const tasks = res.docs.map((doc: any) => {
+            return {
+                id: doc.id,
+                ...doc.data(),
+            }
+        });
+      return tasks as Task[];
+    } catch (error) {
+        console.log(error);
+        return null;
+    }
+}
+
 const taskApi = {
     create,
     update,
-    del
+    del,
+    getDetail,
+    getMyTasks,
+    getByProject
 };
   
 export default taskApi;
