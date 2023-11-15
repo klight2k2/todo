@@ -1,5 +1,5 @@
 import { db } from "@/firebase"
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore"
+import { addDoc, arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from "firebase/firestore"
 
 export type Comment = {
     email: string,
@@ -7,7 +7,6 @@ export type Comment = {
     content: string,
     timestamp: string,
 }
-
 export type Task = {
     id: string,
     name: string,
@@ -18,6 +17,7 @@ export type Task = {
     endTime: string,
     priority: number,
     status: number,
+    reviewer?: string, //user_id
     rate?: string,
     description: string,
     comments?: Comment[],
@@ -87,7 +87,7 @@ const getMyTasks = async (email: string) => {
         return null;
     }
 }
-  
+
 const getByProject = async (projectId: string) => {
     try {
         const q = query(collection(db, "tasks"), where("projectId", "==", projectId));
@@ -105,13 +105,31 @@ const getByProject = async (projectId: string) => {
     }
 }
 
+
+
+const addComment = async (id: string, payload: Comment) => {
+    try {
+        const taskRef = doc(db, "tasks", id);
+        await setDoc(taskRef, {
+            comments: arrayUnion(payload),
+        }, { merge: true });
+        return true;
+    } catch (error) {
+        console.log(error);
+        return null;
+    }
+}
+
+
+
 const taskApi = {
     create,
     update,
     del,
     getDetail,
     getMyTasks,
+    addComment,
     getByProject
 };
-  
+
 export default taskApi;
