@@ -1,0 +1,12 @@
+.lane{
+  border-top: 5px solid;
+  padding: 0 5px;
+  border-image-slice: 1;
+  border-width: 5px;
+  border-image-source: linear-gradient(90deg, #48c6ef 0%, #de6ced 100%);
+}
+
+.task-time{
+  font-size: 12px;
+
+}
