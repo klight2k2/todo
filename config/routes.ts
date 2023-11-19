@@ -23,38 +23,56 @@ export default [
     ],
   },
   {
-    path: '/welcome',
-    name: 'welcome',
-    icon: 'smile',
-    component: './Welcome',
-  },
-  {
-    path: '/admin',
-    name: 'admin',
-    icon: 'crown',
-    access: 'canAdmin',
-    routes: [
-      {
-        path: '/admin',
-        redirect: '/admin/sub-page',
-      },
-      {
-        path: '/admin/sub-page',
-        name: 'sub-page',
-        component: './Admin',
-      },
-    ],
-  },
-  {
-    name: 'list.table-list',
-    icon: 'table',
-    path: '/list',
-    component: './TableList',
+    path: '/',
+    redirect: '/home',
   },
   {
     path: '/',
-    redirect: '/welcome',
+    name: 'User panel',
+    routes: [
+      {
+        path: '/home',
+        icon: 'HomeFilled',
+        name: 'Trang chủ',
+        component: './Home',
+
+      },
+      {
+        path: '/my-task',
+        name: 'Công việc cá nhân',
+        icon: 'ReconciliationFilled',
+        // access: 'canAdmin',
+        component: './MyTask'
+      },
+      {
+        name: 'Dự án',
+        icon: 'ProjectOutlined',
+        path: '/project',
+        component: './Group',
+      },
+      {
+        hideInMenu: true,
+        name: 'Chi tiết đồ án',
+        icon: 'ProjectOutlined',
+        path: '/project/:id',
+        component: './ProjectDetail',
+      },
+      {
+        path: '/my-profile',
+        name: 'Thông tin cá nhân',
+        icon: 'ReconciliationFilled',
+        // access: 'canAdmin',
+        component: './Profile'
+      },
+    ]
   },
+  // {
+  //   name: 'Đồ án',
+  //   icon: 'ProjectOutlined',
+  //   path: '/project',
+  //   component: './Group',
+  // },
+
   {
     path: '*',
     layout: false,
