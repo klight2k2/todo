@@ -1,0 +1,9 @@
+.tag-private{
+  background-color: #fff !important;
+  border-color: #FF60D2 !important;
+  color:  #FF60D2 !important ;
+}
+
+.tag{
+  border-radius: 10px;
+}
