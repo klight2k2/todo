@@ -13,7 +13,6 @@ export type CustomType = {
   children: React.ReactNode;
   projectId: string;
   projectName?: string;
-  typeWork:number;
 }
 
 const TaskCreateModal: React.FC<CustomType> = ({ children,projectId="private", projectName="Cá nhân"}) => {
