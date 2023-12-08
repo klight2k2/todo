@@ -7,22 +7,30 @@ const Settings: ProLayoutProps & {
   pwa?: boolean;
   logo?: string;
 } = {
-  navTheme: 'light',
   // 拂晓蓝
-  colorPrimary: '#1890ff',
+  colorPrimary: '#7942FE',
   layout: 'mix',
   contentWidth: 'Fluid',
   fixedHeader: false,
   fixSiderbar: true,
   colorWeak: false,
-  title: 'Ant Design Pro',
+  title: 'Todolist',
+  siderWidth:220,
   pwa: true,
-  logo: 'https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg',
+  logo: '/icons/todo.png',
   iconfontUrl: '',
   token: {
-    // 参见ts声明，demo 见文档，通过token 修改样式
-    //https://procomponents.ant.design/components/layout#%E9%80%9A%E8%BF%87-token-%E4%BF%AE%E6%94%B9%E6%A0%B7%E5%BC%8F
-  },
+      colorBgAppListIconHover: 'rgba(0,0,0,0.06)',
+      colorTextAppListIconHover: 'rgba(255,255,255,0.95)',
+      colorTextAppListIcon: 'rgba(255,255,255,0.85)',
+      sider: {
+        colorMenuBackground:'#fff',
+        colorBgMenuItemHover:'#EFE9FF',
+        colorBgMenuItemSelected:'#EFE9FF',
+        colorTextMenuSelected:'#7942FE'
+      },
+    },
+    siderMenuType: 'group'
 };
 
 export default Settings;
