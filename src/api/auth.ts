@@ -109,6 +109,67 @@ const findByEmail = async (email: string) => {
   }
 }
 
+const getAllUser = async () => {
+  try {
+    const q = query(collection(db, "users"));
+    const docs = await getDocs(q);
+    if(!docs.empty){
+      return docs.docs.map((doc) => doc.data() as User);
+    }
+    return null;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
+
+
+const changeInfo = async (user: User, id: string) => {
+  try {
+    console.log("aaa", user, id);
+    const userDoc = doc(db, "users", id);
+    
+    await setDoc(userDoc, user);
+    return true;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
+
+const changePassword = async (newPass: string) => {
+  try {
+    const auth = getAuth()
+    const user = auth.currentUser
+    if (user) {
+      await updatePassword(user, newPass).then(() => {
+        console.log("Change password sucessed");
+      }).catch((err) => {
+        console.log(err);
+      })
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
+
+const getUserById = async (id: string) => {
+  try {
+    if (!id) return null;
+    const userDoc = doc(db, "users", id);
+    const result = await getDoc(userDoc)
+    return {
+      id: result.id,
+      ...result.data()
+    }
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
 
 const authApi = {
   register,
@@ -116,7 +177,10 @@ const authApi = {
   logout,
   getUsersByEmail,
   findByEmail,
-
+  changeInfo,
+  changePassword,
+  getUserById,
+  getAllUser
 }
 
 export default authApi;
