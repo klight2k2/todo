@@ -23,6 +23,7 @@ const errorMap = {
 
 
 export type User = {
+  uid?: string,
   displayName?: string,
   email: string,
   password?: string,
@@ -86,7 +87,10 @@ const getUsersByEmail = async (email: string[]) => {
     const q = query(collection(db, "users"), where("email", "in", email));
     const docs = await getDocs(q);
     if(!docs.empty){
-      return docs.docs.map((doc) => doc.data() as User);
+      return docs.docs.map((doc) => ({
+        uid: doc.id,
+        ...doc.data()
+      }) as User);
     }
     return null;
   } catch (error) {
@@ -100,7 +104,10 @@ const findByEmail = async (email: string) => {
     const q = query(collection(db, "users"), where("email", "==", email));
     const docs = await getDocs(q);
     if(!docs.empty){
-      return docs.docs.map((doc) => doc.data() as User)[0];
+      return docs.docs.map((doc) => ({
+        uid: doc.id,
+        ...doc.data()
+      }) as User)[0];
     }
     return null;
   } catch (error) {
@@ -114,7 +121,10 @@ const getAllUser = async () => {
     const q = query(collection(db, "users"));
     const docs = await getDocs(q);
     if(!docs.empty){
-      return docs.docs.map((doc) => doc.data() as User);
+      return docs.docs.map((doc) => ({
+        uid: doc.id,
+        ...doc.data()
+      }) as User);
     }
     return null;
   } catch (error) {

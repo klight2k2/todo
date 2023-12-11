@@ -85,11 +85,11 @@ const MyTask: React.FC = () => {
     console.log(task)
     if (searchData === '' || task.name.includes(searchData)) {
       if (task.status === 1) {
-        todoTask.push(<TaskLine task={task}></TaskLine>)
+        todoTask.push(<TaskLine task={task} key={task.id}></TaskLine>)
       } else if (task.status === 2) {
-        doingTask.push(<TaskLine task={task}></TaskLine>)
+        doingTask.push(<TaskLine task={task} key={task.id}></TaskLine>)
       } else {
-        doneTask.push(<TaskLine task={task}></TaskLine>)
+        doneTask.push(<TaskLine task={task} key={task.id}></TaskLine>)
       }
     }
   })
