@@ -107,6 +107,9 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu, childre
   const { currentUser } = initialState;
 
   console.log("drop",currentUser)
+  if(!currentUser){
+     auth.signOut()
+  }
   if (!currentUser || !currentUser.displayName) {
     return loading;
   }

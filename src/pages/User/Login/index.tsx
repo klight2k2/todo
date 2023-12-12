@@ -9,12 +9,14 @@ import {
   UserOutlined,
   WeiboCircleOutlined,
 } from '@ant-design/icons';
+import { FcGoogle } from "react-icons/fc";
 import {
   LoginForm,
   ProFormCaptcha,
   ProFormCheckbox,
   ProFormText,
-  ProForm
+  ProForm,
+  ModalForm
 } from '@ant-design/pro-components';
 import { useEmotionCss } from '@ant-design/use-emotion-css';
 import { FormattedMessage, history, SelectLang, useIntl, useModel, Helmet } from '@umijs/max';
@@ -24,7 +26,7 @@ import React, { useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { Image } from 'antd';
 import register from '../../../api/auth'
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/firebase';
 import api from '@/api';
 const ActionIcons = () => {
@@ -92,7 +94,7 @@ const Login: React.FC = () => {
   const [userLoginState, setUserLoginState] = useState<API.LoginResult>({});
   const [type, setType] = useState<string>('account');
   const { initialState, setInitialState } = useModel('@@initialState');
-
+  const [form] = Form.useForm<{ email: string }>();
   const containerClassName = useEmotionCss(() => {
     return {
       display: 'flex',
@@ -108,9 +110,9 @@ const Login: React.FC = () => {
   const intl = useIntl();
 
   const fetchUserInfo = async () => {
-   const auth=await  getAuth();
+    const auth = await getAuth();
     if (auth.currentUser) {
-      const userInfo=await api.authApi.findByEmail(auth.currentUser?.email)
+      const userInfo = await api.authApi.findByEmail(auth.currentUser?.email)
       flushSync(() => {
         setInitialState((s) => ({
           ...s,
@@ -121,9 +123,9 @@ const Login: React.FC = () => {
   };
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
-      if(user){
-        console.log("User",user)
-        const userInfo=await api.authApi.findByEmail(user?.email)
+      if (user) {
+        console.log("User", user)
+        const userInfo = await api.authApi.findByEmail(user?.email)
         console.log(userInfo)
         flushSync(() => {
           setInitialState((s) => ({
@@ -133,7 +135,7 @@ const Login: React.FC = () => {
         });
         const urlParams = new URL(window.location.href).searchParams;
         history.push(urlParams.get('redirect') || '/');
-        setUserLoginState({status:"success",type:"account",currentAuthority:"admin"});
+        setUserLoginState({ status: "success", type: "account", currentAuthority: "admin" });
       }
     });
 
@@ -142,87 +144,115 @@ const Login: React.FC = () => {
     };
   }, []);
 
+  const loginWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    const auth = getAuth();
+    signInWithPopup(auth, provider)
+      .then(async (result) => {
+        // This gives you a Google Access Token. You can use it to access the Google API.
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        const token = credential.accessToken;
+        console.log("gooogle", result);
+        // The signed-in user info.
+        const user = result.user;
+        const findUser = await register.findByEmail(user.email)
+        if (!findUser) {
+
+        }
+        await fetchUserInfo();
+
+      }).catch((error) => {
+        // Handle Errors here.
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        // The email of the user's account used.
+        const email = error.customData.email;
+        // The AuthCredential type that was used.
+        const credential = GoogleAuthProvider.credentialFromError(error);
+        // ...
+      });
+  }
   const handleSubmit = async (values: API.LoginParams) => {
     console.log("handle", values);
     if (type === 'register') {
-      const res=await register.register({ ...values })
-      if(res!==null){
+      const res = await register.register({ ...values })
+      if (res !== null) {
         message.success("Đăng kí tài khoản thành công!")
-      }else{
+      } else {
         message.error("Có lỗi xảy ra, vui lòng thử lại!")
       }
     } else {
       let user = await register.login({ ...values })
       if (user) {
-          const defaultLoginSuccessMessage = intl.formatMessage({
-            id: 'pages.login.success',
-            defaultMessage: 'Đăng nhập thành công',
-          });
-          message.success(defaultLoginSuccessMessage);
-          await fetchUserInfo();
-          const urlParams = new URL(window.location.href).searchParams;
-          history.push(urlParams.get('redirect') || '/');
-            setUserLoginState({status:"success",type:"account",currentAuthority:"admin"});
-          return;
-
-        }
-      }
-      try {
-        // 登录
-        const msg = await login({ ...values, type });
-        console.log(msg);
-        // 如果失败去设置用户错误信息
-      } catch (error) {
-        const defaultLoginFailureMessage = intl.formatMessage({
-          id: 'pages.login.failure',
-          defaultMessage: '登录失败，请重试！',
+        const defaultLoginSuccessMessage = intl.formatMessage({
+          id: 'pages.login.success',
+          defaultMessage: 'Đăng nhập thành công',
         });
-        console.log(error);
-        message.error(defaultLoginFailureMessage);
-      }
-    };
-    const { status, type: loginType } = userLoginState;
+        message.success(defaultLoginSuccessMessage);
+        await fetchUserInfo();
+        const urlParams = new URL(window.location.href).searchParams;
+        history.push(urlParams.get('redirect') || '/');
+        setUserLoginState({ status: "success", type: "account", currentAuthority: "admin" });
+        return;
 
-    return (
-      <ConfigProvider
-        theme={{
-          token: {
-            colorPrimary: '#7942FE',
-          },
-        }}
-      >
-        <div className={containerClassName}>
-          <Helmet>
-            <title>
-              {intl.formatMessage({
-                id: 'menu.login',
-                defaultMessage: 'Đăng nhập',
-              })}
-              - {Settings.title}
-            </title>
-          </Helmet>
-          <Lang />
-          <div
-            style={{
-              flex: '1',
-              padding: '32px 0',
-            }}
-          >
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              height: '100%',
-              paddingInline: '32px',
-              paddingBlock: '24px'
-              ,alignItems: 'center'
-            }}>
+      }
+    }
+    try {
+      // 登录
+      const msg = await login({ ...values, type });
+      console.log(msg);
+      // 如果失败去设置用户错误信息
+    } catch (error) {
+      const defaultLoginFailureMessage = intl.formatMessage({
+        id: 'pages.login.failure',
+        defaultMessage: '登录失败，请重试！',
+      });
+      console.log(error);
+      message.error(defaultLoginFailureMessage);
+    }
+  };
+  const { status, type: loginType } = userLoginState;
+
+  return (
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: '#7942FE',
+        },
+      }}
+    >
+      <div className={containerClassName}>
+        <Helmet>
+          <title>
+            {intl.formatMessage({
+              id: 'menu.login',
+              defaultMessage: 'Đăng nhập',
+            })}
+            - {Settings.title}
+          </title>
+        </Helmet>
+        <Lang />
+        <div
+          style={{
+            flex: '1',
+            padding: '32px 0',
+          }}
+        >
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            paddingInline: '32px',
+            paddingBlock: '24px'
+            , alignItems: 'center'
+          }}>
             <Form
-            style={{
-              width: '328px',
-              maxWidth: '75vw',
-              minWidth: '280px'
-          }
-            }
+              style={{
+                width: '328px',
+                maxWidth: '75vw',
+                minWidth: '280px'
+              }
+              }
 
 
               onFinish={async (values) => {
@@ -302,6 +332,7 @@ const Login: React.FC = () => {
                     ]}
                   />
                 </> :
+
                 <>
                   <ProFormText
                     name="displayName"
@@ -333,7 +364,7 @@ const Login: React.FC = () => {
                     }}
                     placeholder={intl.formatMessage({
                       id: 'pages.login.username.placeholder',
-                      defaultMessage: 'Nhập tài khoản',
+                      defaultMessage: 'Nhập email',
                     })}
                     rules={[
                       {
@@ -341,7 +372,7 @@ const Login: React.FC = () => {
                         message: (
                           <FormattedMessage
                             id="pages.login.username.required"
-                            defaultMessage="Tài khoản là trường bắt buộc!"
+                            defaultMessage="Email là trường bắt buộc!"
                           />
                         ),
                       },
@@ -350,7 +381,7 @@ const Login: React.FC = () => {
                         message: (
                           <FormattedMessage
                             id="pages.login.username.invalid"
-                            defaultMessage="Tài khoản là trường bắt buộc!"
+                            defaultMessage="Email không hợp lệ!"
                           />
                         ),
                       },
@@ -379,6 +410,7 @@ const Login: React.FC = () => {
                     ]}
                   />
                 </>
+
               }
 
 
@@ -389,52 +421,132 @@ const Login: React.FC = () => {
               >
 
               </div>
-                <Button type="primary" htmlType="submit" size='large' style={{width:'100%'}}>{type==='account'?'Đăng nhập':'Đăng kí'}</Button>
+              <Button type="primary" htmlType="submit" size='large' style={{ width: '100%' }}>{type === 'account' ? 'Đăng nhập' : 'Đăng kí'}</Button>
 
-            <div>
+              <div>
+                <div className='mb-16'>
+                  {
+                    type == 'account' && <ModalForm<{
+                      email: string;
+                    }>
+                      title="Đặt lại mật khẩu"
+                      trigger={
 
-            {
-                type == 'account' ?
-                <div
-                  style={{
-                    float: 'right',
-                    fontSize: 14
+                        <a style={{ color: '#7942FE' }} className='hover mb-16' onClick={() => setType('forget')}>
 
-                  }}
-                  className='mb-16'
-                >
+                          Quên mật khẩu
+                        </a>
+                      }
+                      autoFocusFirstInput
+                      modalProps={{
+                        destroyOnClose: true,
+                        onCancel: () => console.log('run'),
+                      }}
+                      onFinish={async (values) => {
+                        const auth = getAuth();
+                        sendPasswordResetEmail(auth, values.email)
+                          .then(() => {
+                            // Password reset email sent!
+                            message.success('Mật khẩu mới đã được gửi đến email của bạn!');
+                            // ..
+                          }).catch((error) => {
+                            const errorCode = error.code;
+                            const errorMessage = error.message;
+                            message.error(errorMessage);
+                            // ..
+                          });
+                        return true;
+                      }}
+                      width="500px"
+                    >
 
-                  Chưa có tài khoản? {' '}
-                  <a style={{ color: '#7942FE' }} className='hover' onClick={() => setType('register')}>
+                      <ProFormText
+                        name="email"
+                        fieldProps={{
+                          size: 'large',
+                          prefix: <UserOutlined />,
+                        }}
+                        placeholder="Hãy nhập email bạn muốn đặt lại mật khẩu"
+                        rules={[
+                          {
+                            required: true,
+                            message: (
+                              <FormattedMessage
+                                id="pages.login.username.required"
+                                defaultMessage="Tài khoản là trường bắt buộc!"
+                              />
+                            ),
+                          },
+                          {
+                            required: true,
+                            type: 'email',
+                            message: (
+                              <FormattedMessage
+                                id="pages.login.username.invalid"
+                                defaultMessage="Email vừa nhập không hợp lệ!"
+                              />
+                            ),
+                          },
+                        ]}
+                      />
 
-                    <FormattedMessage id="pages.login.register" />
-                  </a>
+                    </ModalForm>
+                  }
 
-                </div> :
-                <div
-                  style={{
-                    float: 'right',
-                    fontSize: 14
+                  {
+                    type == 'account' ?
+                      <div
+                        style={{
+                          float: 'right',
+                          fontSize: 14
 
-                  }}
-                  className='mb-16'
-                >
+                        }}
+                        className='mb-16'
+                      >
 
-                  Đã có tài khoản {' '}
-                  <a style={{ color: '#7942FE' }} className='hover' onClick={() => setType('account')}>
+                        Chưa có tài khoản? {' '}
+                        <a style={{ color: '#7942FE' }} className='hover' onClick={() => setType('register')}>
 
-                    <FormattedMessage id="pages.login.signin" />
-                  </a>
+                          <FormattedMessage id="pages.login.register" />
+                        </a>
 
+                      </div> :
+                      <div
+                        style={{
+                          float: 'right',
+                          fontSize: 14
+
+                        }}
+                        className='mb-16'
+                      >
+
+                        Đã có tài khoản {' '}
+                        <a style={{ color: '#7942FE' }} className='hover' onClick={() => setType('account')}>
+
+                          <FormattedMessage id="pages.login.signin" />
+                        </a>
+
+
+                      </div>
+                  }
                 </div>
-            }
-            </div>
+
+                {
+                  type == 'account' && <div style={{ fontSize: 16 }} >
+
+                    <p className=''>  Đăng nhập bằng cách khác :</p>
+                    <Button size='large' style={{ width: '100%' }} icon={<FcGoogle />} onClick={loginWithGoogle}> Đăng nhập với Google</Button>
+                  </div>
+                }
+
+              </div>
             </Form>
-            </div>
           </div>
         </div>
-      </ConfigProvider>
-    );
-  };
+      </div>
 
-  export default Login;
+    </ConfigProvider>
+  );
+};
+
+export default Login;
