@@ -1,7 +1,7 @@
 import api from '@/api';
 import { Task } from '@/api/task';
 import ModalCustom from '@/components/ModalCustom';
-import { getDate, getDayPeriod } from '@/utils';
+import { getDate, getDayPeriod, isOverdue } from '@/utils';
 import { AimOutlined, CheckOutlined, FieldTimeOutlined } from '@ant-design/icons';
 import { PageContainer, ProCard } from '@ant-design/pro-components';
 import { Link, useModel } from '@umijs/max';
@@ -31,9 +31,7 @@ import CustomAvatar from '@/components/CustomAvatar';
 const Home: React.FC = () => {
     const { initialState } = useModel('@@initialState');
     const { currentUser } = initialState || {};
-    const [listGroup, setListGroup] = useState<DataType[]>([
 
-    ]);
     const { listTask, addTask, setListTask } = useModel('listTask');
     const { listProject, addProject, setListProject } = useModel('project');
     useEffect(() => {
@@ -55,13 +53,15 @@ const Home: React.FC = () => {
         getMyProjects();
     }, []);
     const doingTask = listTask
-        .filter((task: Task) => task.status === 2)
+        .filter((task: Task) => task.status === 2 && !isOverdue(task))
     const todoTask = listTask
-        .filter((task: Task) => task.status === 1)
+        .filter((task: Task) => task.status === 1 && !isOverdue(task))
     console.log("projects", listProject)
     const doneTask = listTask
         .filter((task: Task) => task.status === 3)
 
+    const overdueTask: Task[] = listTask
+        .filter((task: Task) => isOverdue(task))
     const tasksInWeek = (tasks: Task[]) => {
         const currentDate = new Date();
         const startOfWeek = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay()));
@@ -71,6 +71,10 @@ const Home: React.FC = () => {
         const tasksInCurrentWeek = tasks.filter(task => {
             const taskStartTime = new Date(task.startTime);
             const taskEndTime = new Date(task.endTime);
+            const currentDate = new Date();
+            if (currentDate >= taskEndTime && task.status !== 3) {
+                return false;
+            }
             return taskStartTime >= startOfWeek || taskEndTime <= endOfWeek;
         });
 
@@ -103,6 +107,7 @@ const Home: React.FC = () => {
                             {' '}
                             <AimOutlined /> {tasksInWeek(todoTask).length} Chưa làm
                         </div>
+
                     </Space>
                 </Space>
             </ProCard>
@@ -116,25 +121,32 @@ const Home: React.FC = () => {
                     // extra={<ModalCustom key={1} type="task-create" />}
                     bordered
                 >
+                    <ProCard.TabPane key="overdue" tab="Quá hạn">
+                        <Space direction="vertical" className="list-task">
+                            {overdueTask.length > 0 ? overdueTask.map((task: Task) =>
+                                <TaskComponent key={task.id} task={task} />
+                            ) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />}
+                        </Space>
+                    </ProCard.TabPane>
                     <ProCard.TabPane key="do" tab="Chưa thực hiện">
                         <Space direction="vertical" className="list-task">
                             {todoTask.length > 0 ? todoTask.map((task: Task) =>
-          <TaskComponent key={task.id} task={task} />
-        ) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />}
+                                <TaskComponent key={task.id} task={task} />
+                            ) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />}
                         </Space>
                     </ProCard.TabPane>
                     <ProCard.TabPane key="doing" tab="Đang thực hiện" style={{ padding: 0 }}>
                         <Space direction="vertical" className="list-task">
                             {doingTask.length > 0 ? doingTask.map((task: Task) =>
-          <TaskComponent key={task.id} task={task} />
-        ) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />}
+                                <TaskComponent key={task.id} task={task} />
+                            ) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />}
                         </Space>
                     </ProCard.TabPane>
                     <ProCard.TabPane key="done" tab="Hoàn thành">
                         <Space direction="vertical" className="list-task">
                             {doneTask.length > 0 ? doneTask.map((task: Task) =>
-          <TaskComponent key={task.id} task={task} />
-        ) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />}
+                                <TaskComponent key={task.id} task={task} />
+                            ) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />}
                         </Space>
                     </ProCard.TabPane>
                 </ProCard>
@@ -161,14 +173,14 @@ const Home: React.FC = () => {
                                 <List.Item
                                     key={id}
                                     extra={
-                                    
-                                            <CustomAvatar email={project.members}></CustomAvatar>
+
+                                        <CustomAvatar email={project.members}></CustomAvatar>
                                     }
                                 >
                                     <List.Item.Meta
                                         avatar={
-                                            <Image  preview={false} width={40}
-                                            height={40} src="https://cdn.memiah.co.uk/blog/wp-content/uploads/counselling-directory.org.uk/2019/04/shutterstock_1464234134-1024x684.jpg" />
+                                            <Image preview={false} width={40}
+                                                height={40} src="https://cdn.memiah.co.uk/blog/wp-content/uploads/counselling-directory.org.uk/2019/04/shutterstock_1464234134-1024x684.jpg" />
                                         }
                                         title={project.name}
                                         description={project?.description}

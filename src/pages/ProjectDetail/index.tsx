@@ -13,6 +13,7 @@ import { DEFAULT_PROJECT_AVT, priorityOptions, typeOptions } from '@/components/
 import ModalCustom from '@/components/ModalCustom';
 import api from '@/api';
 import Search from 'antd/es/input/Search';
+import { isOverdue } from '@/utils';
 
 type Childnode = {
   task: Task
@@ -27,6 +28,7 @@ const TaskLine: React.FC<Childnode> = ({ task }) => {
         <Col span={6}>
           {task?.tags?.map((tag, id) => <CustomTag content={tag} key={id} />)}
           <CustomTag content={priorityOptions[task.priority - 1]?.label} />
+          {isOverdue(task)&& <CustomTag content="overdue" color='#c1beb9' />}
         </Col>
         <Col span={5}> Deadline:{task?.endTime}</Col>
 
@@ -72,17 +74,19 @@ const ProjectDetail: React.FC = () => {
   })
   listTask.forEach(task => {
     console.log(task)
-    if (searchData === '' || task.name.includes(searchData)) {
-
+    let tags:string[]=[...task.tags] ||[]
+    tags.push(priorityOptions[task.priority - 1]?.label)
+    tags.push(task.projectName)
+    if(isOverdue(task)) tags.push("overdue"); 
+    if (searchData === '' || task.name.toLowerCase().includes(searchData.toLowerCase()) || tags.some(tag=>tag.toLowerCase().includes(searchData.toLowerCase()))) {
       if (task.status === 1) {
-        todoTask.push(<TaskLine task={task}></TaskLine>)
+        todoTask.push(<TaskLine task={task} key={task.id}></TaskLine>)
       } else if (task.status === 2) {
-        doingTask.push(<TaskLine task={task}></TaskLine>)
+        doingTask.push(<TaskLine task={task} key={task.id}></TaskLine>)
       } else {
-        doneTask.push(<TaskLine task={task}></TaskLine>)
+        doneTask.push(<TaskLine task={task} key={task.id}></TaskLine>)
       }
     }
-
   })
   const params = useParams();
   useEffect(() => {

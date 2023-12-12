@@ -13,21 +13,25 @@ import TaskDetailModal from '@/components/ModalCustom/TaskDetailModal';
 import { DEFAULT_AVATAR, priorityOptions, typeOptions } from '@/components/ModalCustom/Options';
 import ModalCustom from '@/components/ModalCustom';
 import api from '@/api';
+import { isOverdue } from '@/utils';
 
 type Childnode = {
   task: Task
 }
 const TaskLine: React.FC<Childnode> = ({ task }) => {
+ 
   const { removeTask } = useModel('listTask')
 
   return (
     <TaskDetailModal task={task}>
-      <Row gutter={[16, 16]} align="middle" className="task">
+      <Row gutter={[16, 16]} align="middle"  className={"task"}>
         <Col span={11}>{task?.name}</Col>
         <Col span={6}>
           <CustomTag content={task.projectName} color='cyan' />
+          {isOverdue(task)&& <CustomTag content="overdue" color='#c1beb9' />}
           <CustomTag  content={priorityOptions[task.priority - 1]?.label} />
           {task?.tags?.map((tag, id) => <CustomTag  content={tag} key={id} />)}
+
         </Col>
         <Col span={5}>Deadline: {task?.endTime.replaceAll("-","/").split(" ")[0]}</Col>
 
@@ -83,7 +87,11 @@ const MyTask: React.FC = () => {
   })
   listTask.forEach(task => {
     console.log(task)
-    if (searchData === '' || task.name.includes(searchData)) {
+    let tags:string[]=[...task.tags] ||[]
+    tags.push(priorityOptions[task.priority - 1]?.label)
+    tags.push(task.projectName)
+    if(isOverdue(task)) tags.push("overdue"); 
+    if (searchData === '' || task.name.toLowerCase().includes(searchData.toLowerCase()) || tags.some(tag=>tag.toLowerCase().includes(searchData.toLowerCase()))) {
       if (task.status === 1) {
         todoTask.push(<TaskLine task={task} key={task.id}></TaskLine>)
       } else if (task.status === 2) {

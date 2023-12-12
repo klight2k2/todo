@@ -1,3 +1,5 @@
+import { Task } from "@/api/task";
+
 export const getDate = () => {
     const date = new Date(); // Tạo đối tượng Date hiện tại
 
@@ -27,3 +29,13 @@ export const getDayPeriod = () => {
 
     return period;
 }
+
+export const isOverdue=  (task: Task)=>{
+    const taskEndTime = new Date(task.endTime);
+    const currentDate = new Date();
+    if(currentDate>= taskEndTime && task.status!==3) {
+
+      return true;
+  }
+  return false;
+  };

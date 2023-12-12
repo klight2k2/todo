@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { ProCard } from "@ant-design/pro-components";
-import { Avatar, Button, Col, Popconfirm, Row, Select, Space, Tag } from "antd";
+import { Avatar, Button, Col, Popconfirm, Row, Select, Space, Tag, Tooltip } from "antd";
 import CustomTag from "@/components/CustomTag";
 import { DeleteOutlined } from "@ant-design/icons";
 import { useModel } from "@umijs/max";
@@ -10,6 +10,7 @@ import { DEFAULT_AVATAR, getAvatar, priorityOptions, typeOptions } from "@/compo
 import './kanban.css'
 import Search from "antd/es/input/Search";
 import TaskDetailModal from "../ModalCustom/TaskDetailModal";
+import { isOverdue } from "@/utils";
 
 const reorder = (list, startIndex, endIndex) => {
   const result = Array.from(list);
@@ -62,7 +63,7 @@ const Group: React.FC = () => {
   });
   const { listTask, editTask, removeTask } = useModel('listTask')
   const [searchData, setSearchData] = useState('')
-  const [orderBy,setOrder] = useState(false)
+  const [orderBy, setOrder] = useState(false)
 
   const listTable = [{ title: 'Chưa thực hiện', key: 'todo', color: '#FFFDF1' },
   { title: 'Đang thực hiện', key: 'doing', color: '#FFF1F1' },
@@ -72,16 +73,20 @@ const Group: React.FC = () => {
     let todoTask = []
     let doingTask = []
     let doneTask = []
-    listTask.sort((a,b)=>{
-    if(orderBy){
-      return b.priority-a.priority
-    }else{
-      return a.priority-b.priority
-    }
-  })
+    listTask.sort((a, b) => {
+      if (orderBy) {
+        return b.priority - a.priority
+      } else {
+        return a.priority - b.priority
+      }
+    })
     listTask.forEach(task => {
-      if (searchData === '' || task.name.includes(searchData)) {
-
+      console.log(task)
+      let tags:string[]=[...task.tags] ||[]
+      tags.push(priorityOptions[task.priority - 1]?.label)
+      tags.push(task.projectName)
+      if(isOverdue(task)) tags.push("overdue"); 
+      if (searchData === '' || task.name.toLowerCase().includes(searchData.toLowerCase()) || tags.some(tag=>tag.toLowerCase().includes(searchData.toLowerCase()))) {
         if (task.status === 1) {
           todoTask.push(task)
         } else if (task.status === 2) {
@@ -91,12 +96,14 @@ const Group: React.FC = () => {
         }
       }
     })
+  
     setState({
       todo: todoTask,
       doing: doingTask,
       done: doneTask
     })
-  }, [listTask, searchData,orderBy])
+
+  }, [listTask, searchData, orderBy])
   function onDragEnd(result) {
     const { source, destination } = result;
 
@@ -214,11 +221,15 @@ const Group: React.FC = () => {
                                     {
                                       item?.tags?.map(tag => <CustomTag content={tag} />)
                                     }
-                                    <CustomTag content={typeOptions[item.type - 1]?.label}></CustomTag>
+                                    {isOverdue(item) && <CustomTag content="overdue" color='#c1beb9' />}
+                                    {/* <CustomTag content={typeOptions[item.type - 1]?.label}></CustomTag> */}
                                   </div>
                                   <div className="d-flex justify-between">
                                     <Space>
-                                      <Avatar src={getAvatar(item.assignee) || DEFAULT_AVATAR} size={24} />
+                                      <Tooltip title={item.assignee}>
+
+                                        <Avatar src={getAvatar(item.assignee) || DEFAULT_AVATAR} size={24} />
+                                      </Tooltip>
                                       Deadline: {item.endTime.replaceAll("-", "/").split(" ")[0]}
                                     </Space>
                                     <Popconfirm
@@ -229,6 +240,11 @@ const Group: React.FC = () => {
                                         removeTask(item.id)
                                       }}
                                       okText="Xóa"
+                                      onCancel={
+                                        (e) => {
+                                          e?.stopPropagation()
+                                        }
+                                      }
                                       cancelText="Hủy"
                                     >
                                       <Button
@@ -238,7 +254,6 @@ const Group: React.FC = () => {
                                         danger icon={<DeleteOutlined />}
                                         style={{ borderRadius: '8px' }}
                                       >
-                                        Xóa
                                       </Button>
                                     </Popconfirm>
                                   </div>

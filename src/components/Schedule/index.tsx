@@ -20,11 +20,14 @@ import { updateSampleSection } from './sample-base';
  */
 import { registerLicense } from '@syncfusion/ej2-base';
 import { useModel } from '@umijs/max';
+import { isOverdue } from '@/utils';
 registerLicense(
-  'Mgo+DSMBaFt9QHFqVkJrW05Gc0BAXWFKblF8RWBTellgBShNYlxTR3ZZQFhjS3tXckBmXnxb;Mgo+DSMBPh8sVXJ2S0d+X1VPcUBAWHxLflF1VWFTf116cVJWESFaRnZdQV1lS3tTdEBnXXpbeHxQ;ORg4AjUWIQA/Gnt2V1hhQlJAfVhdX2ZWfFN0RnNbdV5zflBBcC0sT3RfQF5jT3xWdkdmXXtbdnRWQw==;MjUwNzEzM0AzMjMyMmUzMDJlMzBGbEE4ckk1ZDE0TlhhRTJYQldjbDRkN1M5VU9mQVJMcUZMdHpBMGxlWlpVPQ==;MjUwNzEzNEAzMjMyMmUzMDJlMzBuQVlCWlp5ekxvWHdlMWpYcUlJcHBMVVdmelRkT2NMa2ZJanBsUnJjdThZPQ==;NRAiBiAaIQQuGjN/V0R+XU9HclRFQmFMYVF2R2BJfVRwd19DZ0wgOX1dQl9gSXhRc0VhXHtadXJTQ2U=;MjUwNzEzNkAzMjMyMmUzMDJlMzBRMm9LSW1xSmpWdE9NNStta2lZbzA0OGFualFWcGYrWEF1M0JnZjlsQlhJPQ==;MjUwNzEzN0AzMjMyMmUzMDJlMzBOTE5uY3ZrMnJpdDdBTmxwdG5WNFZhc3FxSnc0d1ZNZndLNmJOT0I5STZNPQ==;Mgo+DSMBMAY9C3t2V1hhQlJAfVhdX2ZWfFN0RnNbdV5zflBBcC0sT3RfQF5jT3xWdkdmXXtbd3ZSQw==;MjUwNzEzOUAzMjMyMmUzMDJlMzBHOHZOZE9nWmxOR25VOVdBcWppMHAvVjNuMnJoSDdydzNEQ1dQaGRIL0hZPQ==;MjUwNzE0MEAzMjMyMmUzMDJlMzBJbDEzRTRGd2dNNUZxQkpUUER2NzNDN0psMkRyQ0k3ZU1DS01sam1jRlBBPQ==;MjUwNzE0MUAzMjMyMmUzMDJlMzBRMm9LSW1xSmpWdE9NNStta2lZbzA0OGFualFWcGYrWEF1M0JnZjlsQlhJPQ==',
-);
+'Ngo9BigBOggjHTQxAR8/V1NGaF5cXmdCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdgWH1fcnRQQmZcWUBzX0I='
+  );
 
-const convertColor = (priority, status) => {
+const convertColor = (task:Task) => {
+ const { priority,status}=task
+ if(isOverdue(task)) return '#c1beb9'
   switch (priority) {
     case 1:
       if (status === 3) return '#16a34a80'
@@ -53,7 +56,7 @@ const Schedule = () => {
         Subject: task.name,
         StartTime: task.startTime,
         EndTime: task.endTime,
-        CategoryColor: convertColor(task.priority, task.status),
+        CategoryColor: convertColor(task),
         test: task,
       };
     }),
