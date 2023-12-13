@@ -117,7 +117,14 @@ const Profile: React.FC = () => {
         const { newPassword } = changePwForm.getFieldsValue();
         
         if (value && value !== newPassword) {
-          return Promise.reject(new Error('The passwords do not match.'));
+          return Promise.reject(new Error('Mật khẩu mới không trùng'));
+        }
+        return Promise.resolve();
+    };
+    const validatePhoneNumber = (_, value) => {
+        const phoneNumberRegex = /^(?:\+?84|0)(?:\d){9,10}$/;
+        if (value && !phoneNumberRegex.test(value)) {
+          return Promise.reject(new Error('Số điện thoại không hợp lệ'));
         }
         return Promise.resolve();
     };
@@ -180,6 +187,9 @@ const Profile: React.FC = () => {
                  <Form.Item
                      label="Số điện thoại"
                      name="phoneNumber"
+                     rules={[
+                        { validator: validatePhoneNumber }
+                     ]}
                  >
                      <Input
                      />
@@ -194,7 +204,7 @@ const Profile: React.FC = () => {
              </Form>:  <Form
                     form={changePwForm}
                     name="change-password"
-                    labelCol={{ span: 6 }}
+                    labelCol={{ span: 9 }}
                     autoComplete="off"
                     onFinish={onFinishChangePassword}
                     onFinishFailed={onFinishFailed}

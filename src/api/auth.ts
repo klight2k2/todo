@@ -140,8 +140,10 @@ const changeInfo = async (user: User, id: string) => {
     const userDoc = doc(db, "users", id);
     
     await setDoc(userDoc, user);
+    message.success("Chỉnh sửa thông tin cá nhân thành công")
     return true;
   } catch (error) {
+    message.error("Có lỗi xảy ra vui lòng thử lại")
     console.log(error);
     return null;
   }
@@ -153,9 +155,9 @@ const changePassword = async (newPass: string) => {
     const user = auth.currentUser
     if (user) {
       await updatePassword(user, newPass).then(() => {
-        console.log("Change password sucessed");
+        message.success("Đổi mật khẩu thành công");
       }).catch((err) => {
-        console.log(err);
+        message.error("Đổi mật khẩu thất bại");
       })
       return true;
     }
